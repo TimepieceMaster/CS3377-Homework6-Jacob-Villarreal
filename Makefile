@@ -3,7 +3,7 @@
 # Course #: CS 3377.002
 
 CXX = g++
-CXXFLAGS = -Wall -g -Wno-write-strings -Wno-maybe-uninitialized 
+CXXFLAGS = -Wall -g -Wno-write-strings 
 CPPFLAGS = -I/scratch/perkins/include
 LDFLAGS = -L/scratch/perkins/lib
 LDLIBS = -lcdk -lcurses 
