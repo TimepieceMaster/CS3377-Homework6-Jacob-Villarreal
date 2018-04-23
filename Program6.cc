@@ -11,7 +11,7 @@
 
 #define MATRIX_WIDTH 3
 #define MATRIX_HEIGHT 5
-#define BOX_WIDTH 20
+#define BOX_WIDTH 25
 #define MATRIX_NAME_STRING "Binary File Contents"
 
 using namespace std;
@@ -25,6 +25,15 @@ struct BinaryFileHeader
 	uint64_t numRecords;
 };
 
+// Describes the records contained in the file we're reading from
+const int maxRecordStringLength = 25;
+struct BinaryFileRecord
+{
+	uint8_t strLength;
+	char stringBuffer[maxRecordStringLength];
+};
+
+
 // All of our work gets done in this function
 void setMatrixContents(CDKMATRIX *matrix)
 {
@@ -32,11 +41,10 @@ void setMatrixContents(CDKMATRIX *matrix)
 	ifstream binFile("cs3377.bin", ios::in | ios::binary);
 	BinaryFileHeader *header = new BinaryFileHeader;
 	binFile.read((char *) header, sizeof(BinaryFileHeader));
-	binFile.close();
 
-	// Write the contents to a stringstream and then to the matrix cells
+	// Write the contents of the header to a stringstream and then to the matrix cells
 	stringstream ss;
-	ss << "Magic: 0x" << hex << uppercase << header->magicNumber;
+	ss << "Magic: 0x" << hex << uppercase << header->magicNumber << dec;
 	setCDKMatrixCell(matrix, 1, 1, ss.str().c_str()); 	
 	ss.str(string());
 	ss << "Version: " << header->versionNumber;
@@ -44,6 +52,19 @@ void setMatrixContents(CDKMATRIX *matrix)
 	ss.str(string());
 	ss << "NumRecords: " << header->numRecords;
 	setCDKMatrixCell(matrix, 1, 3, ss.str().c_str());
+	ss.str(string());
+
+	// Read in the first four records and put them in the matrix
+	for (unsigned int row = 2; row <= header->numRecords + 1 && row <= 5; ++row)
+	{
+		BinaryFileRecord *record = new BinaryFileRecord;
+		binFile.read((char *) record, sizeof(BinaryFileRecord));
+		ss << "strlen: " << int(record->strLength);
+		setCDKMatrixCell(matrix, row, 1, ss.str().c_str());
+		setCDKMatrixCell(matrix, row, 2, record->stringBuffer);
+		ss.str(string());
+		delete record;
+	}
 	delete header;
 }
 
