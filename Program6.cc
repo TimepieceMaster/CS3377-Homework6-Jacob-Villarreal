@@ -3,20 +3,52 @@
 //  Course #: CS 3377.002
 
 #include <iostream>
+#include <stdint.h>
+#include <string>
+#include <fstream>
+#include <sstream>
 #include "cdk.h"
 
-
-#define MATRIX_WIDTH 4
-#define MATRIX_HEIGHT 3
-#define BOX_WIDTH 15
-#define MATRIX_NAME_STRING "Test Matrix"
+#define MATRIX_WIDTH 3
+#define MATRIX_HEIGHT 5
+#define BOX_WIDTH 20
+#define MATRIX_NAME_STRING "Binary File Contents"
 
 using namespace std;
 
 
+// This describes the header of the file we're reading from
+struct BinaryFileHeader
+{
+	uint32_t magicNumber;
+	uint32_t versionNumber;
+	uint64_t numRecords;
+};
+
+// All of our work gets done in this function
+void setMatrixContents(CDKMATRIX *matrix)
+{
+	// Read in the header
+	ifstream binFile("cs3377.bin", ios::in | ios::binary);
+	BinaryFileHeader *header = new BinaryFileHeader;
+	binFile.read((char *) header, sizeof(BinaryFileHeader));
+	binFile.close();
+
+	// Write the contents to a stringstream and then to the matrix cells
+	stringstream ss;
+	ss << "Magic: 0x" << hex << uppercase << header->magicNumber;
+	setCDKMatrixCell(matrix, 1, 1, ss.str().c_str()); 	
+	ss.str(string());
+	ss << "Version: " << header->versionNumber;
+	setCDKMatrixCell(matrix, 1, 2, ss.str().c_str());
+	ss.str(string());
+	ss << "NumRecords: " << header->numRecords;
+	setCDKMatrixCell(matrix, 1, 3, ss.str().c_str());
+	delete header;
+}
+
 int main()
 {
-
   WINDOW	*window;
   CDKSCREEN	*cdkscreen;
   CDKMATRIX     *myMatrix;           // CDK Screen Matrix
@@ -29,8 +61,8 @@ int main()
   // values you choose to set for MATRIX_WIDTH and MATRIX_HEIGHT
   // above.
 
-  const char 		*rowTitles[] = {"R0", "R1", "R2", "R3", "R4", "R5"};
-  const char 		*columnTitles[] = {"C0", "C1", "C2", "C3", "C4", "C5"};
+  const char 		*rowTitles[] = {"R0", "a", "b", "c", "d", "e"};
+  const char 		*columnTitles[] = {"C0", "a", "b", "c", "d", "e"};
   int		boxWidths[] = {BOX_WIDTH, BOX_WIDTH, BOX_WIDTH, BOX_WIDTH, BOX_WIDTH, BOX_WIDTH};
   int		boxTypes[] = {vMIXED, vMIXED, vMIXED, vMIXED,  vMIXED,  vMIXED};
 
@@ -65,6 +97,7 @@ int main()
    * Dipslay a message
    */
   setCDKMatrixCell(myMatrix, 2, 2, "Test Message");
+  setMatrixContents(myMatrix);
   drawCDKMatrix(myMatrix, true);    /* required  */
 
   /* So we can see results, pause until a key is pressed. */
